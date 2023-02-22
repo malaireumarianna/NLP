@@ -2,6 +2,34 @@
 import operator
 import math
 
+import math
+# import nltk
+import operator
+from collections import Counter
+
+
+
+
+def get_unigrams(tokens):
+    """Creating unigram dictionary"""
+    unigr_dict = Counter(tokens)
+    return unigr_dict
+
+
+def get_bigrams(tokens, distance=50):
+    """Creating bigrams for different distances and creating bigram dictionary"""
+    # bigrams = nltk.bigrams(tokens)
+    bigrams = []
+    for cur_tok_id in range(0, len(tokens) - 1):
+        for dist_tok_id in range(1 if distance == 1 else 2, distance + 1):
+            if len(tokens) > (cur_tok_id + dist_tok_id):
+                bigrams.append((tokens[cur_tok_id], tokens[cur_tok_id + dist_tok_id]))
+    bigr_dict = Counter(bigrams)
+    return bigr_dict, len(bigrams)
+
+
+
+
 #Count number of N-grams
 def countNgram(ngram_list):
     cgrams = {}
