@@ -3,137 +3,130 @@
 import operator
 import math
 
-'''
-Subterms and total mutual information calculation
-qk(l,r) = ck(l,r)/N log(N ck(l,r)/(ckl(l) ckr(r)))
-'''
-def calcQ(cUnigram, cBigram, N, q):
-    mi = 0
-    for key in cBigram.keys():
-        q[key] = cmi(N, cUnigram[key[0]], cUnigram[key[1]], cBigram[key])
-        mi += q[key]
-    return mi, q
+from collections import Counter
 
-'''
-Substractions calculation
-sk(a) = sum(l=1..k,qk(l,a)) + sum(r=1..k,qk(a,r)) - qk(a,a)
-'''
-def calcS(uniqueTerms, cUnigramL, cUnigramR, q):
-    s = {}
-    for word in uniqueTerms:
-        # Note: q[word,word] doesn't exist in this implementation! Anyway it is unigram with MI which is log2(1) = 0
-        s[word] = 0
-        s[word] = sum(t((wordL, word), q) for wordL in cUnigramL.keys()) + \
-                  sum(t((word, wordR), q) for wordR in cUnigramR.keys())
-    return s
 
-'''
-Calculation of minimal loss L
-Lk(a,b) = sk(a)+sk(b)-qk(a,b)-qk(b,a)-qk(a+b,a+b) - sum(l=1..k,l<>a,bqk(l,a+b)) - sum(r=1..k,r<>a,bqk(a+b,r))
-'''
-def calcL(uniqueTerms, cUnigramL, cUnigramR, cBigram, N, q, s):
-    minl = 1000.0
-    l = {}
 
-    for a in range(0, len(uniqueTerms)):
-        wordA = uniqueTerms[a]
-        for b in range(a + 1, len(uniqueTerms)):
-            wordB = uniqueTerms[b]
-
-            sumL = 0
-            sumR = 0
-
-            cUnigramRAB = cUnigramR[wordA] + cUnigramR[wordB]
-
-            for wordL in cUnigramL.keys():
-                if not (wordL == wordA or wordL == wordB):
-                    cBigramLAB = t((wordL, wordA), cBigram) + t((wordL, wordB), cBigram)
-                    sumL = sumL + cmi(N, cUnigramL[wordL], cUnigramRAB, cBigramLAB)
-
-            # if((wordA == "cannot" and wordB == "may") or (wordA == "may" and wordB == "cannot")):
-            #    print("L",wordA, wordB, N, biLwA, biLwB, uniL, cUnigramRAB, sumL)
-
-            cUnigramLAB = cUnigramL[wordA] + cUnigramL[wordB]
-
-            for wordR in cUnigramR.keys():
-                if not (wordR == wordA or wordR == wordB):
-                    cBigramRAB = t((wordA, wordR), cBigram) + t((wordB, wordR), cBigram)
-                    sumR = sumR + cmi(N, cUnigramR[wordR], cUnigramLAB, cBigramRAB)
-
-            # if((wordA == "cannot" and wordB == "may") or (wordA == "may" and wordB == "cannot")):
-            #    print("R",wordA, wordB, N, biRwA, biRwB, uniR, cUnigramLAB, sumR)
-
-            cBigramAB = t((wordA, wordA), cBigram) + t((wordA, wordB), cBigram) + t((wordB, wordA), cBigram) + t((wordB, wordB), cBigram)
-            l[(wordA, wordB)] = s[wordA] + s[wordB] - t((wordA, wordB), q) - t((wordB, wordA), q) - \
-                                cmi(N,cUnigramLAB,cUnigramRAB,cBigramAB) - sumL - sumR
-
-            # if ((wordA == "case" and wordB == "subject") or (wordA == "subject" and wordB == "case")):
-            #    print 'Minimal loss: ' + str(l[(wordA, wordB)]) + ' for ' + wordA + '+' + wordB
-
-            if (l[(wordA, wordB)] < minl):
-                minl = l[(wordA, wordB)]
-                minWordA = wordA
-                minWordB = wordB
-
-    return minl, minWordA, minWordB
-
-'''
-Merge classes
-'''
-def doClassesMerge(uniqueTerms, cBigram, cUnigramL, cUnigramR, classes, wordA, wordB):
-    # merge counts of unigram wordA and unigram wordB into unigram wordA and delete unigram wordB
-    cUnigramL[wordA] = cUnigramL[wordA] + cUnigramL[wordB]
-    del cUnigramL[wordB]
-    cUnigramR[wordA] = cUnigramR[wordA] + cUnigramR[wordB]
-    del cUnigramR[wordB]
-
-    # merge classes
-    classes[wordA] = classes[wordA] + "+" + classes[wordB]
-    del classes[wordB]
-
-    # update uniqueTerms
-    uniqueTerms.remove(wordB)
-
-    # merge counts of bigram
-    cBigramAux = cBigram.copy()
-    for key in cBigram.keys():
-        if key[0] == wordB:
-            if key[1] == wordB:
-                '''key[0],key[1] = minWordB,minWordB'''
-                if (t((wordB, wordB), cBigramAux) > 0) and (t((wordA, wordA), cBigramAux) > 0):
-                    cBigramAux[(wordA, wordA)] += cBigramAux[(wordB, wordB)]
-                    del cBigramAux[(wordB, wordB)]
-                else:
-                    cBigramAux[(wordA, wordA)] = 0
+def read_txt(filename, mode, limit):
+    """Reading input file and dividing into two groups of tokens (limited and all)"""
+    tokens = ["<s>"]
+    with open(filename, encoding="iso8859_2") as f:
+        for line in f:
+            if mode == "w":
+                tokens.append(line.strip().split("/")[0])
             else:
-                '''key[0],key[1] = minWordB,key[1]'''
-                if (t((wordB, key[1]), cBigramAux) > 0) and (t((wordA, key[1]), cBigramAux) > 0):
-                    cBigramAux[(wordA, key[1])] += cBigramAux[(wordB, key[1])]
-                    del cBigramAux[(wordB, key[1])]
-                else:
-                    cBigramAux[(wordA, key[1])] = 0
-        else:
-            if key[1] == wordB:
-                '''key[0],key[1] = key[0],minWordB'''
-                if (t((key[0], wordB), cBigramAux) > 0) and (t((wordA, wordB), cBigramAux) > 0):
-                    cBigramAux[(wordA, wordB)] += cBigramAux[(key[0], wordB)]
-                    del cBigramAux[(key[0], wordB)]
-                else:
-                    cBigramAux[(wordA, wordB)] = 0
-                # else:
-                '''key[0],key[1] = key[0],key[1] - not necessary to care :-)'''
+                tokens.append(line.strip().split("/")[1])
+        return tokens[:limit + 1]
 
-    return uniqueTerms, cBigramAux, cUnigramL, cUnigramR, classes
 
-'''
-Calculate Mutual Information
-'''
-def cmi(N, cx, cy, cxy):
-    return ((cxy / N) * math.log(1.0 * (cxy * N) / (cx * cy), 2)) if (1.0 * (cxy * N) / (cx * cy) > 0) else 0
+def mi(c_x, c_y, c_xy, N):
+    """Counting MI using formuala on slide 127"""
+    return (c_xy / N) * math.log((c_xy * N) / (c_x * c_y), 2) if (c_xy * N) / (c_x * c_y) > 0 else 0
 
-'''
-Test if key i exists in dictionary d and return it's value or 0
-'''
-def t(key, dictionary):
-    # key is item in dictionary d or not :-)
-    return dictionary[key] if key in dictionary else 0
+
+def mi_sum(unigr_left, unigr_right, bigr_dict, N):
+    """Summing MI for all bigrams in a text and writing each to a dictionary"""
+    mi_dict = {}
+    for bigram in bigr_dict:
+        mi_dict[bigram] = mi(unigr_left[bigram[0]], unigr_right[bigram[1]], bigr_dict[bigram], N)
+    return mi_dict
+
+
+def check_key(key, dict):
+    """Checking the presence in a dictionary"""
+    return dict[key] if key in dict else 0
+
+
+def calculate_sum(unigr_dict, bigr_dict, mi_dict):
+    """Summation part, formula on slide 127"""
+    sum_dict = {}
+    for word in unigr_dict:
+        sum_dict[word] = sum(mi_dict[bigram] for bigram in bigr_dict if bigram[0] == word) + \
+                         sum(mi_dict[bigram] for bigram in bigr_dict if bigram[1] == word) \
+                         - check_key((word, word), mi_dict)
+    return sum_dict
+
+
+def calculate_sub(sum_dict, mi_dict, word_a, word_b):
+    """Subtraction part, formula on slide 127"""
+    return sum_dict[word_a] + sum_dict[word_b] - \
+        check_key((word_a, word_b), mi_dict) - check_key((word_b, word_a), mi_dict)
+
+
+def calculate_sum_lr(word_a, word_b, unigr_dict, bigr_dict, word_list, posit, N):
+    """Calculate sum over left positioned and right positioned word a and word b"""
+    sum_lr_ab = 0
+    c_ab = unigr_dict[word_a] + unigr_dict[word_b]
+    for word in word_list:
+        c_lr = float(unigr_dict[word])
+        if not (word == word_a or word == word_b):
+            if posit == 0:
+                c_lr_ab = bigr_dict[(word, word_a)] + bigr_dict[(word, word_b)]
+            else:
+                c_lr_ab = bigr_dict[(word_a, word)] + bigr_dict[(word_b, word)]
+            sum_lr_ab += mi(c_lr, c_ab, c_lr_ab, N)
+    return sum_lr_ab, c_ab
+
+
+def calculate_add(word_a, word_b, unigr_dict, unigr_left, unigr_right, bigr_dict, N):
+    """Calculate add, formula on slide 128"""
+    sum_l_ab, c_l_ab = calculate_sum_lr(word_a, word_b, unigr_dict, bigr_dict, unigr_left, 0, N)
+    sum_r_ab, c_r_ab = calculate_sum_lr(word_a, word_b, unigr_dict, bigr_dict, unigr_right, 1, N)
+    c_ab_ab = bigr_dict[(word_a, word_a)] + bigr_dict[(word_a, word_b)] + \
+              bigr_dict[(word_b, word_a)] + bigr_dict[(word_b, word_b)]
+    return mi(c_l_ab, c_r_ab, c_ab_ab, N) + sum_l_ab + sum_r_ab
+
+
+def loss_count(classes, bigr_dict, mi_dict, unigr_dict, unigr_left, unigr_right, N):
+    """Losses calculation, formula from slide 131, finding minimal loss"""
+    L = {}
+    L_min = ("", 1.)
+    sum_dict = calculate_sum(unigr_dict, bigr_dict, mi_dict)
+    for id_a in range(0, len(classes)):
+        for id_b in range(id_a + 1, len(classes)):   # so that not to repeat
+            word_a = classes[id_a]
+            word_b = classes[id_b]
+            sub = calculate_sub(sum_dict, mi_dict, word_a, word_b)
+            add = calculate_add(word_a, word_b, unigr_dict, unigr_left, unigr_right, bigr_dict, N)
+            L[(word_a, word_b)] = sub - add
+            if L_min[1] > L[(word_a, word_b)]:
+                L_min = ((word_a, word_b), L[(word_a, word_b)])
+    return L_min
+
+
+def merge_classes(unigr_dict, unigr_left, unigr_right, bigr_dict, classes, L_min):
+    """Updating dictionaries of counts and history of class merges"""
+    word_a = L_min[0][0]
+    word_b = L_min[0][1]
+
+    # Merge unigram counts
+    unigr_dict[word_a] += unigr_dict[word_b]
+    del unigr_dict[word_b]
+    unigr_left[word_a] += unigr_left[word_b]
+    del unigr_left[word_b]
+    unigr_right[word_a] += unigr_right[word_b]
+    del unigr_right[word_b]
+
+    # Merge bigram counts
+    for bigram in list(bigr_dict):
+        if bigram[0] == word_b or bigram[1] == word_b:
+            if bigram[0] == word_b:
+                change_to_0 = word_a
+                change_from_0 = word_b
+            else:
+                change_to_0 = bigram[0]
+                change_from_0 = bigram[0]
+            if bigram[1] == word_b:
+                change_to_1 = word_a
+                change_from_1 = word_b
+            else:
+                change_to_1 = bigram[1]
+                change_from_1 = bigram[1]
+            bigr_dict[(change_to_0, change_to_1)] += bigr_dict[(change_from_0, change_from_1)]
+            del bigr_dict[(change_from_0, change_from_1)]
+
+    # Merge classes
+    classes[word_a] = classes[word_a] + " " + classes[word_b]
+    del classes[word_b]
+
+    return classes, unigr_left, unigr_right, unigr_dict, bigr_dict
