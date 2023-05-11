@@ -7,7 +7,6 @@ Original file is located at
     https://colab.research.google.com/gist/malaireumarianna/4897a8fd3134b7d34243164d9234b32d/nlp1_2part.ipynb
 """
 
-!git clone https://github.com/malaireumarianna/NLP.git
 
 '''with open('/content/NLP/TEXTEN1.txt', 'r',  encoding="iso-8859-2") as file:
     en_data = file.read().replace('\n', ' ').split()'''
