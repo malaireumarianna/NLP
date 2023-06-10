@@ -52,8 +52,8 @@ vocab_en_heldout_data_size = len(vacb_en_heldout_data)
 bigram_en_heldout_data = list(ngrams(en_heldout_data, 2))
 trigram_en_heldout_data = list(ngrams(en_heldout_data, 3))
 unigram_en_heldout_data = list(en_heldout_data) 
-print(len(bigram_en_heldout_data))
-print(len(trigram_en_heldout_data))
+#print(len(bigram_en_heldout_data))
+#print(len(trigram_en_heldout_data))
 
 #Generate lists of n-grams from test data
 vacb_en_test_data = list(set(sorted(en_test_data)))
@@ -61,7 +61,7 @@ vocab_en_test_data_size = len(vacb_en_test_data)
 bigram_en_test_data = list(ngrams(en_test_data, 2))
 trigram_en_test_data = list(ngrams(en_test_data, 3))
 unigram_en_test_data = list(ngrams(en_test_data, 1)) 
-print(bigram_en_test_data)
+#print(bigram_en_test_data)
 
 #Generate frequency on each word
 def generate_tokens_freq(tokens):
@@ -154,7 +154,7 @@ def smoothedProbConditional(word, h1, h2, lambdas, unigram, bigram, trigram, voc
 unigramCount(unigram_en_train_data[98], unigram_en_train_data)
 
 uniform_probability_train = 1/vocab_en_train_data_size
-print(uniform_probability_train)
+#print(uniform_probability_train)
 
 trigram_en_train_data[0]
 
