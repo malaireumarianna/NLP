@@ -474,6 +474,26 @@ class TriEM_model:
 
         # Get uniform probability
         self.unif_prob = 1. / len(self.unigr_counts)
+        
+    def unigramCount(word,unigram):
+        if not word in dct_train.keys():
+            return 0
+        return dct_train[word]
+
+    def bigramCount(word, h1, bigram):
+        tar_tup = (h1,word)
+        res = False
+        res = dct1_train.get(tar_tup) != None
+        if res == False:
+           return 0
+        return dct1_train[tar_tup]
+    def trigramCount(word, h1, h2, trigram):
+        tar_tup = (h2, h1,word)
+        res = False
+        res = dct2_train.get(tar_tup) != None
+        if res == False:
+            return 0
+        return dct2_train[tar_tup]
 
     def get_probs(self, hist2, hist1, word):
         """Getting probabilities for a word"""
