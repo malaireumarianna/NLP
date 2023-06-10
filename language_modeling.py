@@ -17,9 +17,9 @@ en_test_data = en_data[-20000:]
 en_heldout_data = en_data[-60000:-20000]
 en_train_data = en_data[:-60000]
 
-print(len(en_heldout_data))
-print(len(en_train_data))
-print(len(en_test_data))
+#print(len(en_heldout_data))
+#print(len(en_train_data))
+#print(len(en_test_data))
 #en_heldout_data
 
 '''with open('/content/NLP/TEXTCZ1.txt', encoding="iso-8859-2" ) as file:
@@ -30,9 +30,9 @@ cz_test_data = cz_data[-20000:]
 cz_heldout_data = cz_data[-60000:-20000]
 cz_train_data = cz_data[:-60000]
 #" ".join(en_heldout_data)
-print(len(cz_test_data))
-print(len(cz_heldout_data))
-print(len(cz_train_data))
+#print(len(cz_test_data))
+#print(len(cz_heldout_data))
+#print(len(cz_train_data))
 
 """# **EN data processing**
 
@@ -205,7 +205,7 @@ while True:
     lambdas[0]=l0_new
 
 
-print(lambdas)
+#print(lambdas)
 
 #Function which calculates cross entropy
 import numpy as np
@@ -245,14 +245,14 @@ discount_lambdas = []
 for i in range(len(discountVector)):
     discount_lambdas.append(discountLambdas(lambdas, discountVector[i]))
 discount_lambdas.append(lambdas)
-print(discount_lambdas)
+#print(discount_lambdas)
 
 #Calculate new lambdas using boosting for 3 lambda
 #On each calculation modified are lambdas found while processing heldout data
 boost_lambdas = []
 for i in range(len(boostingVector)):
     boost_lambdas.append(boostLambdas(lambdas, boostingVector[i]))
-print(boost_lambdas)
+#print(boost_lambdas)
 
 #Calculate cross entropies for boosted lambdas
 cross_entropy_test_update_boost = []
@@ -340,7 +340,7 @@ while True:
     lambdas[0]=l0_new
 
 
-print(lambdas)
+#print(lambdas)
 
 cross_entropy(lambdas, trigram_cz_test_data, cz_test_data,  unigram_cz_train_data, bigram_cz_train_data, trigram_cz_train_data,  vocab_cz_train_data_size)
 
@@ -350,14 +350,14 @@ discount_lambdas_cz = []
 for i in range(len(discountVector)):
     discount_lambdas_cz.append(discountLambdas(lambdas, discountVector[i]))
 discount_lambdas_cz.append(lambdas)
-print(discount_lambdas_cz)
+#print(discount_lambdas_cz)
 
 #Finding lambdas using boosting of 3 lambda
 boost_lambdas_cz = []
 for i in range(len(boostingVector)):
     boost_lambdas_cz.append(boostLambdas(lambdas, boostingVector[i]))
 
-print(boost_lambdas_cz)
+#print(boost_lambdas_cz)
 
 #Calculate cross entropies using smoothed probabilities of test trigrams calculated with boosted lambdas
 cross_entropy_test_update_boost_cz = []
@@ -437,7 +437,7 @@ fig = px.line(EN_results_table, x='Discount/Boosting', y='Cross Entropy' )
 fig.add_scatter(x=CZ_results_table['Discount/Boosting'], y=CZ_results_table['Cross Entropy'])
 
 #fig = px.line(CZ_results_table, x='Discount/Boosting', y='Cross Entropy', title='CZ')
-fig.show()
+#fig.show()
 
 
   
